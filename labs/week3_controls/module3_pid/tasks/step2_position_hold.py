@@ -24,11 +24,12 @@ TARGET_DIST = 4.0    # meters forward
 TARGET_HEIGHT = 3.0  # hold launch height
 KP = 0.12
 KI = 0.0
-KD = 0.15
-PITCH_LIMIT = 0.3
+KD = 0.5    # strong velocity damping to avoid overshoot
+PITCH_LIMIT = 0.25
 ALT_KP = 0.12
 THROTTLE_LIMIT = 0.5
-DIST_TOL = 0.3
+DIST_TOL = 0.4
+SETTLE_SPEED = 0.25  # must slow below this to count as arrived
 HOLD_TIME = 2.0
 
 # -- Module-level state -----------------------------------------------------
@@ -64,16 +65,18 @@ def update(drone):
     #### START PUT CODE HERE #########
 
     # We have no direct (x, z) position, so integrate velocity to estimate distance.
-    # Pitch sets forward SPEED, so keep the gain small (like throttle).
+    # Pitch accelerates the drone, so use the velocity itself as the derivative term
+    # (KD) to brake before the target instead of overshooting.
     # 1. dt = drone.get_delta_time()
     # 2. velocity = drone.physics.get_linear_velocity()   # (x=right, y=up, z=forward)
     # 3. _pos += velocity[2] * dt
-    # 4. error = TARGET_DIST - _pos ; update _err_int, err_dot, _prev_err (see Step 1).
+    # 4. error = TARGET_DIST - _pos ; _err_int += error*dt ; err_dot = -velocity[2]
     # 5. pitch = uav_utils.clamp(pid_control(error, _err_int, err_dot, KP, KI, KD),
     #                            -PITCH_LIMIT, PITCH_LIMIT)
     # 6. Hold height too: throttle = clamp(ALT_KP*(TARGET_HEIGHT - neo_lab.height(drone)),
     #                                      -THROTTLE_LIMIT, THROTTLE_LIMIT)
-    # 7. send_pcmd(pitch, 0, 0, throttle); finish once within DIST_TOL for HOLD_TIME
+    # 7. send_pcmd(pitch, 0, 0, throttle); finish once within DIST_TOL AND slower than
+    #    SETTLE_SPEED for HOLD_TIME
 
     ###### END PUT CODE HERE #########
     ##################################

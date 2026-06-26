@@ -3,7 +3,7 @@ MIT BWSI Autonomous Drone Racing Course - UAV Neo
 GNU General Public License v3.0
 
 Week 2/3 Lab — Step 2: Bounding Box  (SOLUTION)
-Find the gate's largest contour and its bounding box.
+Find the largest cyan gate structure and its bounding box.
 Source: 05_ColorSegmentation.ipynb (bounding boxes).
 """
 
@@ -21,10 +21,8 @@ if _d not in _sys.path:
 import neo_lab
 
 # -- Constants --------------------------------------------------------------
-LOWER1 = np.array([  0, 120,  70], dtype=np.uint8)
-UPPER1 = np.array([ 10, 255, 255], dtype=np.uint8)
-LOWER2 = np.array([170, 120,  70], dtype=np.uint8)
-UPPER2 = np.array([180, 255, 255], dtype=np.uint8)
+LOWER = neo_lab.CYAN_LOWER
+UPPER = neo_lab.CYAN_UPPER
 MIN_AREA = 400
 HOVER_TIME = 3.0
 
@@ -45,8 +43,7 @@ def update(drone):
     drone.flight.stop()   # hover in place
     _timer += drone.get_delta_time()
     image = drone.camera.get_color_image()
-    contours = (uav_utils.find_contours(image, LOWER1, UPPER1) +
-                uav_utils.find_contours(image, LOWER2, UPPER2))
+    contours = uav_utils.find_contours(image, LOWER, UPPER)
     best = uav_utils.get_largest_contour(contours, MIN_AREA)
     if best is None:
         return False

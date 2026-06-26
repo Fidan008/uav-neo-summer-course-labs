@@ -2,8 +2,8 @@
 MIT BWSI Autonomous Drone Racing Course - UAV Neo
 GNU General Public License v3.0
 
-Week 2/3 Lab — Step 2: Largest Object  (SOLUTION)
-Locate the largest object and report its center and area.
+Week 2/3 Lab — Step 2: Largest Gate  (SOLUTION)
+Locate the largest glowing gate frame and report its center and area.
 Source: 04_Downward.ipynb (largest contour + centroid).
 """
 
@@ -21,8 +21,7 @@ if _d not in _sys.path:
 import neo_lab
 
 # -- Constants --------------------------------------------------------------
-SAT_MIN = 100
-VAL_MIN = 60
+V_MIN = 200
 MIN_AREA = 300
 HOVER_TIME = 3.0
 
@@ -43,16 +42,13 @@ def update(drone):
     drone.flight.stop()   # hover in place
     _timer += drone.get_delta_time()
     image = drone.camera.get_downward_image()
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    mask = ((hsv[:, :, 1] > SAT_MIN) & (hsv[:, :, 2] > VAL_MIN)).astype(np.uint8) * 255
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    best = uav_utils.get_largest_contour(contours, MIN_AREA)
+    best = neo_lab.largest_bright_contour(image, V_MIN, MIN_AREA)
     if best is None:
         return False
     center = uav_utils.get_contour_center(best)     # (row, col)
     area = uav_utils.get_contour_area(best)
     if _timer >= HOVER_TIME:
-        print(f"[Step 2] Largest object at row={center[0]}, col={center[1]}, "
+        print(f"[Step 2] Largest gate at row={center[0]}, col={center[1]}, "
               f"area={area:.0f}")
         _done = True
     return _done
@@ -65,7 +61,7 @@ if __name__ == "__main__":
     def start():
         _launcher.reset()
         reset()
-        print("Step 2: Largest Object")
+        print("Step 2: Largest Gate")
 
     def _update():
         if not _launcher.done:        # arm + climb to a safe height first

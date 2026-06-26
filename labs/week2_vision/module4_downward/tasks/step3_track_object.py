@@ -2,8 +2,8 @@
 MIT BWSI Autonomous Drone Racing Course - UAV Neo
 GNU General Public License v3.0
 
-Week 2/3 Lab — Step 3: Center Over the Object
-Visual-servo the drone to hover directly above the object.
+Week 2/3 Lab — Step 3: Center Over the Gate
+Visual-servo the drone to hover directly above the gate frame.
 Source: 04_Downward.ipynb applied live (downward camera).
 """
 
@@ -21,11 +21,10 @@ if _d not in _sys.path:
 import neo_lab
 
 # -- Constants --------------------------------------------------------------
-SAT_MIN = 100
-VAL_MIN = 60
+V_MIN = 200
 MIN_AREA = 300
-MAX_TILT = 0.20      # pitch/roll authority
-CENTER_TOL = 40      # pixels considered 'centered'
+MAX_TILT = 0.18      # pitch/roll authority
+CENTER_TOL = 60      # pixels considered 'centered'
 HOLD_TIME = 2.0      # seconds to stay centered before done
 ROW_CENTER = 240
 COL_CENTER = 320
@@ -47,7 +46,7 @@ def update(drone):
     ##################################
     #### START PUT CODE HERE #########
 
-    # 1. Build mask + contours + best (largest contour) like Step 2.
+    # 1. best = neo_lab.largest_bright_contour(image, V_MIN, MIN_AREA)
     # 2. If best is None: drone.flight.stop(); _hold = 0.0; return False
     # 3. row, col = uav_utils.get_contour_center(best)
     # 4. err_col = col - COL_CENTER ; err_row = row - ROW_CENTER
@@ -70,7 +69,7 @@ if __name__ == "__main__":
     def start():
         _launcher.reset()
         reset()
-        print("Step 3: Center Over the Object")
+        print("Step 3: Center Over the Gate")
 
     def _update():
         if not _launcher.done:        # arm + climb to a safe height first

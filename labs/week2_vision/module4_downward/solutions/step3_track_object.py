@@ -2,8 +2,8 @@
 MIT BWSI Autonomous Drone Racing Course - UAV Neo
 GNU General Public License v3.0
 
-Week 2/3 Lab — Step 3: Center Over the Object  (SOLUTION)
-Visual-servo the drone to hover directly above the object.
+Week 2/3 Lab — Step 3: Center Over the Gate  (SOLUTION)
+Visual-servo the drone to hover directly above the gate frame.
 Source: 04_Downward.ipynb applied live (downward camera).
 """
 
@@ -21,11 +21,10 @@ if _d not in _sys.path:
 import neo_lab
 
 # -- Constants --------------------------------------------------------------
-SAT_MIN = 100
-VAL_MIN = 60
+V_MIN = 200
 MIN_AREA = 300
-MAX_TILT = 0.20      # pitch/roll authority
-CENTER_TOL = 40      # pixels considered 'centered'
+MAX_TILT = 0.18      # pitch/roll authority
+CENTER_TOL = 60      # pixels considered 'centered'
 HOLD_TIME = 2.0      # seconds to stay centered before done
 ROW_CENTER = 240
 COL_CENTER = 320
@@ -45,17 +44,14 @@ def update(drone):
     if _done:
         return True
     image = drone.camera.get_downward_image()
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    mask = ((hsv[:, :, 1] > SAT_MIN) & (hsv[:, :, 2] > VAL_MIN)).astype(np.uint8) * 255
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    best = uav_utils.get_largest_contour(contours, MIN_AREA)
+    best = neo_lab.largest_bright_contour(image, V_MIN, MIN_AREA)
     if best is None:
         drone.flight.stop()
         _hold = 0.0
         return False
     row, col = uav_utils.get_contour_center(best)
-    err_col = col - COL_CENTER               # +ve => object is to the right
-    err_row = row - ROW_CENTER               # +ve => object is behind (toward image bottom)
+    err_col = col - COL_CENTER               # +ve => gate is to the right
+    err_row = row - ROW_CENTER               # +ve => gate is behind (toward image bottom)
     roll = uav_utils.clamp(err_col / COL_CENTER * MAX_TILT, -MAX_TILT, MAX_TILT)
     pitch = uav_utils.clamp(-err_row / ROW_CENTER * MAX_TILT, -MAX_TILT, MAX_TILT)
     drone.flight.send_pcmd(pitch, roll, 0, 0)
@@ -65,7 +61,7 @@ def update(drone):
         _hold = 0.0
     if _hold >= HOLD_TIME:
         drone.flight.stop()
-        print("[Step 3] Centered over the object")
+        print("[Step 3] Centered over the gate")
         _done = True
     return _done
 
@@ -77,7 +73,7 @@ if __name__ == "__main__":
     def start():
         _launcher.reset()
         reset()
-        print("Step 3: Center Over the Object")
+        print("Step 3: Center Over the Gate")
 
     def _update():
         if not _launcher.done:        # arm + climb to a safe height first

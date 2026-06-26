@@ -2,9 +2,10 @@
 MIT BWSI Autonomous Drone Racing Course - UAV Neo
 GNU General Public License v3.0
 
-Week 2/3 Lab — Step 1: Find Contours  (SOLUTION)
-Threshold a saturated object and count its contours.
-Source: 04_Downward.ipynb (contour analysis).
+Week 2/3 Lab — Step 1: Find Gate Contours  (SOLUTION)
+Threshold the glowing gate edges below the drone and count contours.
+The downward camera sees gates as bright WHITE frames.
+Source: 04_Downward.ipynb (contour analysis), retargeted to the sim scene.
 """
 
 import drone_core
@@ -21,8 +22,7 @@ if _d not in _sys.path:
 import neo_lab
 
 # -- Constants --------------------------------------------------------------
-SAT_MIN = 100
-VAL_MIN = 60
+V_MIN = 200
 HOVER_TIME = 3.0
 
 # -- Module-level state -----------------------------------------------------
@@ -42,11 +42,10 @@ def update(drone):
     drone.flight.stop()   # hover in place
     _timer += drone.get_delta_time()
     image = drone.camera.get_downward_image()
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    mask = ((hsv[:, :, 1] > SAT_MIN) & (hsv[:, :, 2] > VAL_MIN)).astype(np.uint8) * 255
+    mask = neo_lab.bright_mask(image, V_MIN)
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if _timer >= HOVER_TIME:
-        print(f"[Step 1] Found {len(contours)} contour(s) below the drone")
+        print(f"[Step 1] Found {len(contours)} glowing-edge contour(s) below the drone")
         _done = True
     return _done
 
@@ -58,7 +57,7 @@ if __name__ == "__main__":
     def start():
         _launcher.reset()
         reset()
-        print("Step 1: Find Contours")
+        print("Step 1: Find Gate Contours")
 
     def _update():
         if not _launcher.done:        # arm + climb to a safe height first

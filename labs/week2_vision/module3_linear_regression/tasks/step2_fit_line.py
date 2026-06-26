@@ -3,7 +3,7 @@ MIT BWSI Autonomous Drone Racing Course - UAV Neo
 GNU General Public License v3.0
 
 Week 2/3 Lab — Step 2: Fit a Line (Least Squares)
-Fit y = m*x + b to the line pixels with linear regression.
+Fit y = m*x + b to the bright edge pixels with linear regression.
 Source: 03_LinearRegression.ipynb (calculate_regression).
 """
 
@@ -21,8 +21,7 @@ if _d not in _sys.path:
 import neo_lab
 
 # -- Constants --------------------------------------------------------------
-SAT_MIN    = 80
-VAL_MIN    = 60
+V_MIN      = 200
 MIN_PIXELS = 200
 HOVER_TIME = 3.0
 
@@ -58,8 +57,8 @@ def update(drone):
     ##################################
     #### START PUT CODE HERE #########
 
-    # 1. Build the saturation/value mask like Step 1.
-    # 2. points = np.argwhere(mask)          # (row, col) coordinates of line pixels
+    # 1. Build the bright-edge mask like Step 1: neo_lab.bright_mask(image, V_MIN) > 0
+    # 2. points = np.argwhere(mask)          # (row, col) coordinates of bright pixels
     # 3. if len(points) < MIN_PIXELS: return False
     # 4. m, b = fit_line(points)             # <-- implement fit_line above
     # 5. When _timer >= HOVER_TIME: print m and b, then set _done = True

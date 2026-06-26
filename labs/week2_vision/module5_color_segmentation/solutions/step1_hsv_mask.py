@@ -3,8 +3,9 @@ MIT BWSI Autonomous Drone Racing Course - UAV Neo
 GNU General Public License v3.0
 
 Week 2/3 Lab — Step 1: HSV Color Mask  (SOLUTION)
-Mask a RED gate in the forward camera using HSV ranges (hue wraps).
-Source: 05_ColorSegmentation.ipynb (HSV masking).
+Mask the CYAN glowing gates in the forward camera using an HSV range.
+(Gates glow cyan ~hue 85; the wall background is blue ~hue 108.)
+Source: 05_ColorSegmentation.ipynb (HSV masking), retargeted to the scene.
 """
 
 import drone_core
@@ -21,10 +22,8 @@ if _d not in _sys.path:
 import neo_lab
 
 # -- Constants --------------------------------------------------------------
-LOWER1 = np.array([  0, 120,  70], dtype=np.uint8)
-UPPER1 = np.array([ 10, 255, 255], dtype=np.uint8)
-LOWER2 = np.array([170, 120,  70], dtype=np.uint8)
-UPPER2 = np.array([180, 255, 255], dtype=np.uint8)
+LOWER = neo_lab.CYAN_LOWER    # [80, 40, 150]
+UPPER = neo_lab.CYAN_UPPER    # [105, 255, 255]
 HOVER_TIME = 3.0
 
 # -- Module-level state -----------------------------------------------------
@@ -45,10 +44,10 @@ def update(drone):
     _timer += drone.get_delta_time()
     image = drone.camera.get_color_image()
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    mask = cv2.inRange(hsv, LOWER1, UPPER1) | cv2.inRange(hsv, LOWER2, UPPER2)
+    mask = cv2.inRange(hsv, LOWER, UPPER)
     coverage = np.count_nonzero(mask) / mask.size
     if _timer >= HOVER_TIME:
-        print(f"[Step 1] Red pixels cover {coverage * 100:.1f}% of the image")
+        print(f"[Step 1] Cyan gate pixels cover {coverage * 100:.1f}% of the image")
         _done = True
     return _done
 

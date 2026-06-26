@@ -2,8 +2,8 @@
 MIT BWSI Autonomous Drone Racing Course - UAV Neo
 GNU General Public License v3.0
 
-Week 2/3 Lab — Step 3: Follow the Line  (SOLUTION)
-Steer the drone to keep the line centered while flying forward.
+Week 2/3 Lab — Step 3: Follow the Edge  (SOLUTION)
+Steer the drone to keep the bright edge centered while flying forward.
 Source: 03_LinearRegression.ipynb applied live.
 """
 
@@ -21,11 +21,10 @@ if _d not in _sys.path:
 import neo_lab
 
 # -- Constants --------------------------------------------------------------
-SAT_MIN       = 80
-VAL_MIN       = 60
+V_MIN         = 200
 MIN_PIXELS    = 200
-FORWARD_PITCH = 0.25     # constant forward speed
-MAX_ROLL      = 0.30     # strafe authority for centering
+FORWARD_PITCH = 0.18     # constant forward speed
+MAX_ROLL      = 0.25     # strafe authority for centering
 FOLLOW_TIME   = 12.0     # seconds to follow before landing
 IMAGE_CENTER  = 320      # 640-wide image -> center column
 
@@ -45,19 +44,18 @@ def update(drone):
         return True
     _timer += drone.get_delta_time()
     image = drone.camera.get_downward_image()
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    mask = (hsv[:, :, 1] > SAT_MIN) & (hsv[:, :, 2] > VAL_MIN)
+    mask = neo_lab.bright_mask(image, V_MIN) > 0
     points = np.argwhere(mask)
     if len(points) < MIN_PIXELS:
-        drone.flight.stop()                 # lost the line -> hover and wait
+        drone.flight.stop()                 # lost the edge -> hover and wait
         return False
-    line_col = points[:, 1].mean()          # average column of the line
-    offset = (line_col - IMAGE_CENTER) / IMAGE_CENTER   # -1 (left) .. +1 (right)
+    edge_col = points[:, 1].mean()          # average column of the bright edge
+    offset = (edge_col - IMAGE_CENTER) / IMAGE_CENTER   # -1 (left) .. +1 (right)
     roll = uav_utils.clamp(offset * MAX_ROLL, -MAX_ROLL, MAX_ROLL)
     drone.flight.send_pcmd(FORWARD_PITCH, roll, 0, 0)
     if _timer >= FOLLOW_TIME:
         drone.flight.stop()
-        print("[Step 3] Finished following the line")
+        print("[Step 3] Finished following the edge")
         _done = True
     return _done
 
@@ -69,7 +67,7 @@ if __name__ == "__main__":
     def start():
         _launcher.reset()
         reset()
-        print("Step 3: Follow the Line")
+        print("Step 3: Follow the Edge")
 
     def _update():
         if not _launcher.done:        # arm + climb to a safe height first

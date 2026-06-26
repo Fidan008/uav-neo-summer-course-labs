@@ -3,7 +3,7 @@ MIT BWSI Autonomous Drone Racing Course - UAV Neo
 GNU General Public License v3.0
 
 Week 2/3 Lab — Step 3: Seek the Gate  (SOLUTION)
-Yaw to center the gate, then fly forward toward it.
+Yaw to center the largest cyan gate, then fly forward toward it.
 Source: 05_ColorSegmentation.ipynb applied live.
 """
 
@@ -21,17 +21,15 @@ if _d not in _sys.path:
 import neo_lab
 
 # -- Constants --------------------------------------------------------------
-LOWER1 = np.array([  0, 120,  70], dtype=np.uint8)
-UPPER1 = np.array([ 10, 255, 255], dtype=np.uint8)
-LOWER2 = np.array([170, 120,  70], dtype=np.uint8)
-UPPER2 = np.array([180, 255, 255], dtype=np.uint8)
+LOWER = neo_lab.CYAN_LOWER
+UPPER = neo_lab.CYAN_UPPER
 MIN_AREA   = 400
 COL_CENTER = 320
-MAX_YAW    = 0.4        # yaw authority for centering
-APPROACH_PITCH = 0.25   # forward speed once centered
+MAX_YAW    = 0.3        # yaw authority for centering
+APPROACH_PITCH = 0.2    # forward speed once centered
 CENTER_TOL = 60         # px error to count as centered
-SEARCH_YAW = 0.25       # spin slowly when no gate is seen
-TARGET_WIDTH = 220      # gate this wide (px) => close enough
+SEARCH_YAW = 0.2        # spin slowly when no gate is seen
+TARGET_WIDTH = 260      # gate this wide (px) => close enough
 
 # -- Module-level state -----------------------------------------------------
 _done = False
@@ -46,11 +44,10 @@ def update(drone):
     if _done:
         return True
     image = drone.camera.get_color_image()
-    contours = (uav_utils.find_contours(image, LOWER1, UPPER1) +
-                uav_utils.find_contours(image, LOWER2, UPPER2))
+    contours = uav_utils.find_contours(image, LOWER, UPPER)
     best = uav_utils.get_largest_contour(contours, MIN_AREA)
     if best is None:
-        drone.flight.send_pcmd(0, 0, SEARCH_YAW, 0)   # scan for the gate
+        drone.flight.send_pcmd(0, 0, SEARCH_YAW, 0)   # scan for a gate
         return False
     x, y, w, h = cv2.boundingRect(best)
     gate_col = x + w / 2.0

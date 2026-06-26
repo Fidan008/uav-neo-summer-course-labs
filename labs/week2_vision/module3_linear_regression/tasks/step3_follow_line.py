@@ -2,8 +2,8 @@
 MIT BWSI Autonomous Drone Racing Course - UAV Neo
 GNU General Public License v3.0
 
-Week 2/3 Lab — Step 3: Follow the Line
-Steer the drone to keep the line centered while flying forward.
+Week 2/3 Lab — Step 3: Follow the Edge
+Steer the drone to keep the bright edge centered while flying forward.
 Source: 03_LinearRegression.ipynb applied live.
 """
 
@@ -21,11 +21,10 @@ if _d not in _sys.path:
 import neo_lab
 
 # -- Constants --------------------------------------------------------------
-SAT_MIN       = 80
-VAL_MIN       = 60
+V_MIN         = 200
 MIN_PIXELS    = 200
-FORWARD_PITCH = 0.25     # constant forward speed
-MAX_ROLL      = 0.30     # strafe authority for centering
+FORWARD_PITCH = 0.18     # constant forward speed
+MAX_ROLL      = 0.25     # strafe authority for centering
 FOLLOW_TIME   = 12.0     # seconds to follow before landing
 IMAGE_CENTER  = 320      # 640-wide image -> center column
 
@@ -46,12 +45,12 @@ def update(drone):
     ##################################
     #### START PUT CODE HERE #########
 
-    # 1. Build the mask and points = np.argwhere(mask), like Step 2.
+    # 1. Build the bright-edge mask and points = np.argwhere(mask), like Step 2.
     # 2. If too few points: drone.flight.stop(); return False
-    # 3. line_col = points[:, 1].mean()
-    # 4. offset = (line_col - IMAGE_CENTER) / IMAGE_CENTER      # -1..+1
+    # 3. edge_col = points[:, 1].mean()
+    # 4. offset = (edge_col - IMAGE_CENTER) / IMAGE_CENTER      # -1..+1
     # 5. roll = uav_utils.clamp(offset * MAX_ROLL, -MAX_ROLL, MAX_ROLL)
-    #    (line to the right -> positive offset -> roll right to recenter)
+    #    (edge to the right -> positive offset -> roll right to recenter)
     # 6. drone.flight.send_pcmd(FORWARD_PITCH, roll, 0, 0)
     # 7. _timer += drone.get_delta_time(); when >= FOLLOW_TIME stop and set _done = True
 
@@ -67,7 +66,7 @@ if __name__ == "__main__":
     def start():
         _launcher.reset()
         reset()
-        print("Step 3: Follow the Line")
+        print("Step 3: Follow the Edge")
 
     def _update():
         if not _launcher.done:        # arm + climb to a safe height first

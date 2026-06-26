@@ -3,8 +3,8 @@ MIT BWSI Autonomous Drone Racing Course - UAV Neo
 GNU General Public License v3.0
 
 Week 2/3 Lab — Step 3: Visual Servoing (Vision + PID)  (SOLUTION)
-Capstone: use a PID loop on the camera pixel error to keep a red
-object centered by yawing. Combines Week 2 vision with Week 3 control.
+Capstone: use a PID loop on the camera pixel error to keep a glowing
+gate centered by yawing. Combines Week 2 vision with Week 3 control.
 """
 
 import drone_core
@@ -21,17 +21,14 @@ if _d not in _sys.path:
 import neo_lab
 
 # -- Constants --------------------------------------------------------------
-LOWER1 = np.array([  0, 120,  70], dtype=np.uint8)
-UPPER1 = np.array([ 10, 255, 255], dtype=np.uint8)
-LOWER2 = np.array([170, 120,  70], dtype=np.uint8)
-UPPER2 = np.array([180, 255, 255], dtype=np.uint8)
+V_MIN = 200
 MIN_AREA = 300
 COL_CENTER = 320
-KP = 0.6
+KP = 0.4
 KI = 0.05
-KD = 0.2
-MAX_YAW = 0.5
-CENTER_TOL = 0.05    # normalized error considered centered
+KD = 0.15
+MAX_YAW = 0.4
+CENTER_TOL = 0.06    # normalized error considered centered
 HOLD_TIME = 3.0
 
 # -- Module-level state -----------------------------------------------------
@@ -58,9 +55,7 @@ def update(drone):
         return True
     dt = drone.get_delta_time()
     image = drone.camera.get_color_image()
-    contours = (uav_utils.find_contours(image, LOWER1, UPPER1) +
-                uav_utils.find_contours(image, LOWER2, UPPER2))
-    best = uav_utils.get_largest_contour(contours, MIN_AREA)
+    best = neo_lab.largest_bright_contour(image, V_MIN, MIN_AREA)
     if best is None:
         drone.flight.stop()
         _err_int = 0.0                           # reset integral when target is lost
@@ -79,7 +74,7 @@ def update(drone):
         _hold = 0.0
     if _hold >= HOLD_TIME:
         drone.flight.stop()
-        print("[Step 3] Locked onto the target")
+        print("[Step 3] Locked onto the gate")
         _done = True
     return _done
 

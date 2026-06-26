@@ -20,9 +20,43 @@ So every flying lab must:
 captured at launch so labs never hardcode the absolute spawn altitude.
 """
 
+import cv2
+import numpy as np
+
 import drone_utils as uav_utils
 
 _ground_alt = 0.0
+
+
+# ── Gate vision ─────────────────────────────────────────────────────────────────────
+# The UAV Neo race scene has no red props or colored ground lines. Gates are dark
+# frames with GLOWING edges — cyan on the forward camera, white on the downward
+# camera — over a blue wall / grey floor. Both read as high "Value" in HSV, so the
+# most robust gate signal is brightness.
+
+# Cyan gate edges on the forward camera (separates from the blue background ~hue 108).
+CYAN_LOWER = np.array([80, 40, 150], dtype=np.uint8)
+CYAN_UPPER = np.array([105, 255, 255], dtype=np.uint8)
+
+
+def bright_mask(image, v_min=200):
+    """Binary mask (0/255) of the glowing gate edges, by HSV Value (brightness)."""
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    return (hsv[:, :, 2] > v_min).astype(np.uint8) * 255
+
+
+def largest_bright_contour(image, v_min=200, min_area=200, dilate=2):
+    """Return the largest glowing-edge contour in the image, or None."""
+    mask = bright_mask(image, v_min)
+    if dilate:
+        mask = cv2.dilate(mask, np.ones((5, 5), np.uint8), iterations=dilate)
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    best, best_area = None, float(min_area)
+    for c in contours:
+        area = cv2.contourArea(c)
+        if area > best_area:
+            best, best_area = c, area
+    return best
 
 
 def set_ground(alt):

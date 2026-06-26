@@ -2,7 +2,7 @@
 MIT BWSI Autonomous Drone Racing Course - UAV Neo
 GNU General Public License v3.0
 
-Week 2 · Module 4 — Downward Camera (Contour Analysis) — SOLUTION orchestrator
+Week 2 · Module 4 — Downward Camera (Gate Detection) — SOLUTION orchestrator
 
 Runs every step in sequence against the simulator:
     drone sim module4_downward/main_solution.py
@@ -29,9 +29,9 @@ drone = drone_core.create_drone()
 launcher = neo_lab.Launcher(3.0)
 
 _STEPS = [
-    ("Step 1: Find Contours", step1_find_contours),
-    ("Step 2: Largest Object", step2_largest_object),
-    ("Step 3: Center Over the Object", step3_track_object)
+    ("Step 1: Find Gate Contours", step1_find_contours),
+    ("Step 2: Largest Gate", step2_largest_object),
+    ("Step 3: Center Over the Gate", step3_track_object)
 ]
 
 _index = 0
@@ -42,7 +42,7 @@ def start():
     _index = 0
     launcher.reset()
     print("\n" + "=" * 56)
-    print("  Week 2 · Module 4 — Downward Camera (Contour Analysis)")
+    print("  Week 2 · Module 4 — Downward Camera (Gate Detection)")
     print("=" * 56 + "\n")
 
 

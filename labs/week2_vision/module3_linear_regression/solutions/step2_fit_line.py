@@ -3,7 +3,7 @@ MIT BWSI Autonomous Drone Racing Course - UAV Neo
 GNU General Public License v3.0
 
 Week 2/3 Lab — Step 2: Fit a Line (Least Squares)  (SOLUTION)
-Fit y = m*x + b to the line pixels with linear regression.
+Fit y = m*x + b to the bright edge pixels with linear regression.
 Source: 03_LinearRegression.ipynb (calculate_regression).
 """
 
@@ -21,8 +21,7 @@ if _d not in _sys.path:
 import neo_lab
 
 # -- Constants --------------------------------------------------------------
-SAT_MIN    = 80
-VAL_MIN    = 60
+V_MIN      = 200
 MIN_PIXELS = 200
 HOVER_TIME = 3.0
 
@@ -52,14 +51,13 @@ def update(drone):
     drone.flight.stop()   # hover in place
     _timer += drone.get_delta_time()
     image = drone.camera.get_downward_image()
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    mask = (hsv[:, :, 1] > SAT_MIN) & (hsv[:, :, 2] > VAL_MIN)
+    mask = neo_lab.bright_mask(image, V_MIN) > 0
     points = np.argwhere(mask)             # array of (row, col)
     if len(points) < MIN_PIXELS:
-        return False                        # not enough of the line in view yet
+        return False                        # not enough edge in view yet
     m, b = fit_line(points)
     if _timer >= HOVER_TIME:
-        print(f"[Step 2] Fitted line slope m={m:.3f}, intercept b={b:.1f}")
+        print(f"[Step 2] Fitted edge slope m={m:.3f}, intercept b={b:.1f}")
         _done = True
     return _done
 
