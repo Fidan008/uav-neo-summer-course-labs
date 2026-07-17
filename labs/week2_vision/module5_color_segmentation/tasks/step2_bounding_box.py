@@ -44,7 +44,16 @@ def update(drone):
     drone.flight.stop()   # hover in place
     ##################################
     #### START PUT CODE HERE #########
-
+    largest_gate = neo_lab.largest_cyan_gate(drone.camera.get_forward_image(), MIN_AREA)
+    if largest_gate is None:
+        print("No gate found")
+        _done = False
+    else:
+        x, y, w, h = cv2.boundingRect(largest_gate)
+        print(f"Bounding box: ({x}, {y}), ({x+w}, {y+h})")
+    _timer += drone.get_delta_time()
+    if _timer >= HOVER_TIME:
+        _done = True
     # The long glowing boundary lines are also cyan, so use neo_lab.largest_cyan_gate(
     # image, MIN_AREA), which keeps only square-ish (gate-shaped) contours; it returns None
     # when there is no gate -> return False. Otherwise find the contour's bounding box and

@@ -44,7 +44,12 @@ def update(drone):
     drone.flight.stop()   # hover in place
     ##################################
     #### START PUT CODE HERE #########
-
+    hsv = cv2.cvtColor(drone.camera.get_forward_image(), cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv, LOWER, UPPER)
+    print(f"Masked pixels fraction: {np.sum(mask > 0) / mask.size:.3f}")
+    _timer += drone.get_delta_time()
+    if _timer >= HOVER_TIME:
+        _done = True
     # The gates glow cyan; the wall is blue. A single HSV range (LOWER..UPPER) isolates
     # the gates: convert the forward color image to HSV and build a mask from that range.
     # Report the fraction of masked pixels. Advance _timer and finish at HOVER_TIME.
