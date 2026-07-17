@@ -43,11 +43,20 @@ def update(drone):
     drone.flight.stop()   # hover in place
     ##################################
     #### START PUT CODE HERE #########
-
+    largest_gate = neo_lab.largest_cyan_gate(drone.camera.get_forward_image(), MIN_AREA)
+    _timer += drone.get_delta_time()
+    if largest_gate is None:
+        print("No gate found")
+        _done = False
+    else:
+        x, y, w, h = cv2.boundingRect(largest_gate)
+        print(f"Bounding box width: {w} pixels")
+    if _timer >= HOVER_TIME:
+        _done = True
     # The bounding box width (in pixels) is how wide the gate appears. Use
     # neo_lab.largest_cyan_gate(image, MIN_AREA) (None when no gate -> return False), take
     # the contour's bounding-box width, and print it. Advance _timer and finish at
-    # HOVER_TIME.
+    # HOVER_TIME. 
 
     ###### END PUT CODE HERE #########
     ##################################

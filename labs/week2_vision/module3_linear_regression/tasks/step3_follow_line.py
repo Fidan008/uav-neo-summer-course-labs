@@ -32,20 +32,36 @@ IMAGE_CENTER  = 320      # 640-wide image -> center column
 # -- Module-level state -----------------------------------------------------
 _timer = 0.0
 _done  = False
-
+roll = 0.0
 def reset():
-    global _timer, _done
+    global _timer, _done, roll
     _timer = 0.0
     _done  = False
-
+    roll = 0.0
 
 def update(drone):
-    global _timer, _done
+    global _timer, _done, roll
     if _done:
         return True
     ##################################
     #### START PUT CODE HERE #########
+    bright_mask = neo_lab.bright_mask(drone.camera.get_downward_image(), V_MIN)
+    bright_pixel_count = np.count_nonzero(bright_mask)
 
+    points = np.argwhere(bright_mask)
+    uav_utils.clamp(roll, -MAX_ROLL, MAX_ROLL)
+
+    
+    if bright_pixel_count >= MIN_PIXELS:
+        avg_col = np.mean(points[:, 1])  # average column of bright pixels
+        offset = avg_col - IMAGE_CENTER   # positive if edge is right of center
+        roll = uav_utils.clamp(offset / IMAGE_CENTER * MAX_ROLL, -MAX_ROLL, MAX_ROLL) # scale offset to roll command
+
+    drone.flight.send_pcmd(FORWARD_PITCH, roll, 0, 0)  # hold position if too few bright pixels    
+    
+    _timer += drone.get_delta_time()
+    if _timer >= FOLLOW_TIME:
+        _done = True   
     # GOAL: fly forward at FORWARD_PITCH while strafing (roll) to keep the bright
     # edge under the middle of the downward camera.
     #

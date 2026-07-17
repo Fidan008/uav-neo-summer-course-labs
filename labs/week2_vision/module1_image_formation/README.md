@@ -21,6 +21,9 @@ sensor at `x = f·X/Z`, `y = f·Y/Z`. The `/Z` is the whole reason perspective w
 the distance, halve the apparent size. `f`, the **focal length**, is how far the sensor
 sits behind the pinhole — a longer `f` zooms in.
 
+"double the distance, halve the apparent size" shouldt it be the other way? when you get farther from the pinhole doesnt the size get bigger??
+is it if focal length gets bigger then the image gets larger but if it is Z that gets bigger then image gets smaller?
+
 **Sensor meters become pixels.** The projection gives a position in meters on the sensor,
 but a pixel grid needs integers. Divide by the physical width of one pixel and shift by the
 **principal point** `(cx, cy)` — the pixel where the optical axis hits the sensor — to get

@@ -24,6 +24,7 @@ import neo_lab
 # -- Constants --------------------------------------------------------------
 KERNEL_SIZE = 5
 HOVER_TIME  = 3.0
+THRESHOLD_VALUE = 127
 
 # -- Module-level state -----------------------------------------------------
 _timer = 0.0
@@ -42,6 +43,26 @@ def update(drone):
     drone.flight.stop()   # hover in place
     ##################################
     #### START PUT CODE HERE #########
+    image = drone.camera.get_downward_image()
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _, binary_mask = cv2.threshold(gray, THRESHOLD_VALUE, 255, cv2.THRESH_BINARY)
+    KERNEL_SIZE = 5
+    KERNEL = np.ones((KERNEL_SIZE, KERNEL_SIZE), np.uint8)
+    eroded = cv2.erode(binary_mask, KERNEL, iterations=1)
+    dilated = cv2.dilate(eroded, KERNEL, iterations=1)
+    before_count = np.count_nonzero(binary_mask)
+    after_count = np.count_nonzero(dilated)
+    _timer += drone.get_delta_time()
+    if _timer >= HOVER_TIME:
+        print(f"[Step 2] Opening with {KERNEL_SIZE}x{KERNEL_SIZE} kernel removed "
+              f"{before_count - after_count} speckle pixels ({before_count} -> {after_count})")
+        _done = True
+    blurred = cv2.blur(gray, (KERNEL_SIZE, KERNEL_SIZE))
+    sobel_x = cv2.Sobel(blurred, cv2.CV_64F, 1, 0, ksize=3)
+    sobel_y = cv2.Sobel(blurred, cv2.CV_64F, 0, 1, ksize=3)
+    edge_magnitude = np.sqrt(sobel_x**2 + sobel_y**2)
+    average_edge_strength = np.mean(edge_magnitude)
+    print(f"[Step 3] Average edge strength: {average_edge_strength:.2f}")
 
     # GOAL: report the average edge strength in the downward image.
     #

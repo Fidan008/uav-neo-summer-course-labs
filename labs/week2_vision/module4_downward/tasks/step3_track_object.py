@@ -49,7 +49,26 @@ def update(drone):
 
     # GOAL: move with pitch/roll until the gate sits in the middle of the downward
     # camera, hold that for HOLD_TIME, then finish.
-    #
+    bright_mask = neo_lab.bright_mask(drone.camera.get_downward_image(), V_MIN)
+    largest_contour = neo_lab.largest_bright_contour(drone.camera.get_downward_image(), V_MIN, MIN_AREA)
+    if largest_contour is None:
+        roll = 0.0
+        pitch = 0.0
+        _hold = 0.0
+        _done = False
+    else:
+        row, col = uav_utils.get_contour_center(largest_contour)
+        row_error = row - ROW_CENTER
+        col_error = col - COL_CENTER
+        roll = uav_utils.clamp(-col_error / COL_CENTER * MAX_TILT, -MAX_TILT, MAX_TILT)
+        pitch = uav_utils.clamp(-row_error / ROW_CENTER * MAX_TILT, -MAX_TILT, MAX_TILT)
+        if abs(row_error) < CENTER_TOL and abs(col_error) < CENTER_TOL:
+            _hold += drone.get_delta_time()
+        else:
+            _hold = 0.0
+    drone.flight.send_pcmd(pitch, roll, 0.0, 0.0)
+    if _hold >= HOLD_TIME:
+        _done = True
     # Tools: drone.camera.get_downward_image(); neo_lab.largest_bright_contour(image,
     #        V_MIN, MIN_AREA) -> contour or None; uav_utils.get_contour_center(c) ->
     #        (row, col); uav_utils.clamp(...); drone.flight.send_pcmd(...).

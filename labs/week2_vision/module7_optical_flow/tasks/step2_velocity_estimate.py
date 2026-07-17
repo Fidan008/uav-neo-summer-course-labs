@@ -59,7 +59,47 @@ def update(drone):
         return True
     ##################################
     #### START PUT CODE HERE #########
+    drone.flight.send_pcmd(PROBE_PITCH, 0, 0, 0)
+    dt = drone.get_delta_time()
+    _timer += dt
+    _interval += dt
+    _frame += 1
 
+    if _frame % SKIP == 0:
+        gray = cv2.cvtColor(drone.camera.get_downward_image(), cv2.COLOR_BGR2GRAY)
+
+        if _prev_pts is None or len(_prev_pts) < MIN_PTS:
+            _prev_pts = cv2.goodFeaturesToTrack(gray, **FEATURE_PARAMS)
+        else:
+            new_pts, status, _err = cv2.calcOpticalFlowPyrLK(
+                _prev_gray, gray, _prev_pts, None, **LK_PARAMS
+            )
+            found = status.flatten() == 1
+            good_new = new_pts[found].reshape(-1, 2)
+            good_old = _prev_pts[found].reshape(-1, 2)
+
+            if len(good_new) > 0:
+                flow_vecs = good_new - good_old            # (N, 2) of (dx, dy) per point
+                mean_dx, mean_dy = np.mean(flow_vecs, axis=0)
+
+                height = neo_lab.height(drone)
+                meters_per_pixel = 2 * height * HFOV_TAN / IMAGE_WIDTH
+
+                # pixels/processed-interval -> meters/second, camera moves opposite scene flow
+                vx = -(mean_dx * meters_per_pixel) / _interval
+                vz = -(mean_dy * meters_per_pixel) / _interval
+
+                true_vel = drone.physics.get_linear_velocity()
+                print(f"Estimated (x,z): ({vx:.2f}, {vz:.2f})  "
+                      f"True (x,z): ({true_vel[0]:.2f}, {true_vel[2]:.2f})")
+
+            _prev_pts = good_new.reshape(-1, 1, 2)
+
+        _prev_gray = gray
+        _interval = 0.0
+
+    if _timer >= RUN_TIME:
+        _done = True
     # GOAL: print an estimated horizontal velocity from optical flow next to the true
     # velocity, so you can see how well vision tracks motion.
     #

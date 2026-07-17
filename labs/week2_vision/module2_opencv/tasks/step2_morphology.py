@@ -43,7 +43,20 @@ def update(drone):
     drone.flight.stop()   # hover in place
     ##################################
     #### START PUT CODE HERE #########
-
+    image = drone.camera.get_downward_image()
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _, binary_mask = cv2.threshold(gray, THRESHOLD_VALUE, 255, cv2.THRESH_BINARY)
+    KERNEL_SIZE = 5
+    KERNEL = np.ones((KERNEL_SIZE, KERNEL_SIZE), np.uint8)
+    eroded = cv2.erode(binary_mask, KERNEL, iterations=1)
+    dilated = cv2.dilate(eroded, KERNEL, iterations=1)
+    before_count = np.count_nonzero(binary_mask)
+    after_count = np.count_nonzero(dilated)
+    _timer += drone.get_delta_time()
+    if _timer >= HOVER_TIME:
+        print(f"[Step 2] Opening with {KERNEL_SIZE}x{KERNEL_SIZE} kernel removed "
+              f"{before_count - after_count} speckle pixels ({before_count} -> {after_count})")
+        _done = True
     # Opening (erode then dilate) removes small speckles but keeps big shapes. Build a
     # binary mask like Step 1, then open it with a KERNEL_SIZE square kernel and compare
     # the white-pixel count before and after to see what was removed. Advance _timer and

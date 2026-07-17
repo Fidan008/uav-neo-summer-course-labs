@@ -59,7 +59,37 @@ def update(drone):
         return True
     ##################################
     #### START PUT CODE HERE #########
+    drone.flight.send_pcmd(PROBE_PITCH, 0, 0, 0)
+    _timer += drone.get_delta_time()
+    _frame += 1
 
+    if _frame % SKIP == 0:
+        gray = cv2.cvtColor(drone.camera.get_downward_image(), cv2.COLOR_BGR2GRAY)
+
+        if _prev_pts is None or len(_prev_pts) < MIN_PTS:
+            # No usable features yet -- (re)detect corners to track
+            _prev_pts = cv2.goodFeaturesToTrack(gray, **FEATURE_PARAMS)
+        else:
+            # Track the previous points into this new frame
+            new_pts, status, _err = cv2.calcOpticalFlowPyrLK(
+                _prev_gray, gray, _prev_pts, None, **LK_PARAMS
+            )
+            found = status.flatten() == 1
+            good_new = new_pts[found].reshape(-1, 2)
+            good_old = _prev_pts[found].reshape(-1, 2)
+
+            if len(good_new) > 0:
+                displacements = np.linalg.norm(good_new - good_old, axis=1)
+                _last_mag = float(np.mean(displacements))
+
+            _prev_pts = good_new.reshape(-1, 1, 2)
+
+        _prev_gray = gray
+
+    print(f"Flow magnitude: {_last_mag:.2f}")
+
+    if _timer >= HOVER_TIME:
+        _done = True
     # Keep the drone drifting (PROBE_PITCH) and the clock running EVERY frame; only pull
     # the image and run flow every SKIP-th frame (that vision work is what would lag the
     # sim). On a processed frame, work in grayscale: when you have no features yet (or

@@ -44,6 +44,17 @@ def update(drone):
     ##################################
     #### START PUT CODE HERE #########
 
+    bright_mask = neo_lab.bright_mask(drone.camera.get_downward_image(), V_MIN)
+    contours, _ = cv2.findContours(bright_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # reminder for future, the ,_ is after the variable name because cv2.findContours returns a tuple of (contours, hierarchy), but we only want the first one, so we use _ to ignore the other and only recieve the list of contours.
+    #ontours = cv2.findContours(bright_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0] 
+    # the [0] at the end is to get the first element of the tuple returned by cv2.findContours, which is the list of contours. The second element is the hierarchy, which we don't need in this case.
+    # it does the same thing essentially as the line above, but the line above is more readable and easier to understand.
+    #also the [0] at the end gets rid of the extra dimension that cv2.findContours returns, unlike , _ which just ignores the second element of the tuple.
+    _timer += drone.get_delta_time()    
+    if _timer >= HOVER_TIME:
+        print(f"Contours found: {len(contours)}")
+        _done = True
     # Gates glow bright, so threshold by brightness (HSV Value), not color:
     # neo_lab.bright_mask(image, V_MIN) gives a 0/255 mask. Find its contours and, after
     # HOVER_TIME, print how many there are and set _done. See the README (Key terms).

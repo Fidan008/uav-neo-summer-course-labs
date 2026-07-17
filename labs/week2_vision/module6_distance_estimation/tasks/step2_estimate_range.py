@@ -53,7 +53,19 @@ def update(drone):
 
     # GOAL: fly toward the gate, estimating distance from its apparent width, and
     # stop once distance <= STOP_DIST.
-    #
+    largest_gate = neo_lab.largest_cyan_gate(drone.camera.get_color_image(), MIN_AREA)
+    if largest_gate is None:
+        drone.flight.send_pcmd(0, 0, SEARCH_YAW, 0)
+    else:
+        x, y, w, h = cv2.boundingRect(largest_gate)
+        error = (x + w/2) - COL_CENTER
+        yaw = uav_utils.clamp(-error / COL_CENTER * MAX_YAW, -MAX_YAW, MAX_YAW)
+        pitch = APPROACH_PITCH if abs(error) < 90 else 0
+        drone.flight.send_pcmd(pitch, 0, yaw, 0)
+        distance = (FOCAL_PX * REAL_GATE_WIDTH) / w
+        print(f"Distance to gate: {distance:.2f} meters")
+        if distance <= STOP_DIST:
+            _done = True
     # Tools: drone.camera.get_color_image(); neo_lab.largest_cyan_gate(image, MIN_AREA);
     #        cv2.boundingRect(contour) -> (x, y, w, h); uav_utils.clamp(...);
     #        drone.flight.send_pcmd(pitch, roll, yaw, throttle), drone.flight.stop().
