@@ -21,7 +21,23 @@ def euler_to_rot(roll, pitch, yaw):
     """
     ##################################
     #### START PUT CODE HERE #########
-    R = np.eye(3)
+    def Rodrigues(axis, theta):
+        """
+        Rodrigues' rotation formula for a rotation matrix.
+        axis: 3D unit vector
+        theta: rotation angle in radians
+        """
+        axis = axis / np.linalg.norm(axis)
+        K = np.array([[0, -axis[2], axis[1]],
+                      [axis[2], 0, -axis[0]],
+                      [-axis[1], axis[0], 0]])
+        M = np.eye(3) + np.sin(theta) * K + (1 - np.cos(theta)) * (K @ K)
+        return M
+    #R = np.eye(3) #identity matrix
+    Rz = Rodrigues(np.array([0, 0, 1]), yaw)
+    Ry = Rodrigues(np.array([0, 1, 0]), pitch)
+    Rx = Rodrigues(np.array([1, 0, 0]), roll)
+    R = Rz @ Ry @ Rx
     ###### END PUT CODE HERE #########
     ##################################
     return R
@@ -35,6 +51,7 @@ def rot_to_quat(R):
     """
     ##################################
     #### START PUT CODE HERE #########
+    
     w = 1.0
     x = 0.0
     y = 0.0
